@@ -1,0 +1,17 @@
+#Script name: palindrome
+#Author:      Weirui Kong
+#Date:        July 17, 2015
+#To determain whether a string(after deleting non alphabetic character)
+# is palindrome or not
+
+#! /bin/bash
+echo -n "Enter a string:"
+read s
+pure=`echo $s | tr -c -d  [!a-zA-Z]`
+reverse=`echo $pure | rev`
+if [ $pure = $reverse ]
+	then
+		echo "It is a palindrome!"
+else
+	echo "It isn't a palindrome!"
+fi

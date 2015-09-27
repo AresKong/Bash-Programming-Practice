@@ -1,0 +1,610 @@
+#Script name:	homeworkManagementSystem
+#Author:		Weirui Kong
+#Date:			July 21, 2015
+#Description:   A simple CLI assignment management system. There are three kinds of uesrs: Super, teacher, student.
+#				The ID for Super user is 777. For more details please read the documentation of this bash program
+
+#! /bin/bash
+
+# Four universal functions: createProfile (), modifyProfile (), removeProfile (), listProfile ()
+# They take two arguments. $1 for identify the kind of profile being edited.
+# $2 for the path which shows where to store the profile
+createProfile ()
+{
+	echo -n "Enter $1's name: "
+	read name
+	echo -n "Enter $name's ID: "
+	read ID
+	echo "$ID		$name" >> $2
+	echo "New $1 profile creation success!"
+}
+
+modifyProfile ()
+{
+	echo -n "Enter the $1's ID that you want to modify: "
+	read ID
+	echo "You mean: "
+	grep $ID $2
+	echo -n "Enter new name: "
+	read name
+	echo -n "Enter new $1 ID: "
+	read NID
+	sed -i "/$ID/d" $2                                      		# Delete the old information
+	echo "$NID		$name" >> $2									# Add the new information
+	echo "$1 profile modification success!"
+}
+
+removeProfile ()
+{
+	echo "Enter the $1's ID that you want to remove: "
+	read ID
+	echo "Do you want to remove: (yes / no)"
+	grep $ID $2
+	read cmd
+	if test $cmd = yes
+		then
+			sed -i "/$ID/d" $2
+			echo "Remove success!"
+		else
+			echo "No remove occurs!"
+	fi
+}
+
+listProfile ()
+{
+
+	echo "The options are as follows: "
+	echo "(1) list the $1's account according to the ID you given"
+	echo "(2) list all the $1's accounts"
+	echo -n "Enter your command: "
+	read option
+	case $option in
+		1) echo -n "Enter the $1's ID: "
+		read ID   
+		echo "The account you want to list is: "
+		grep $ID $2
+			;;
+		2) echo "All the $1' accounts are:"
+		cat $2
+			;;
+	esac
+}
+
+# A function that called by super () to edit teacher profile (create, modify, remove and list)
+# Calling the four unviersal functions by passing proper arguments
+editTeacherProfile ()
+{
+	tcreate ()
+	{
+		createProfile teacher ~/myDocuments/teacherProfile
+	}
+
+	tmodify ()
+	{
+		modifyProfile teacher ~/myDocuments/teacherProfile
+	}
+
+	tremove ()
+	{
+		removeProfile teacher ~/myDocuments/teacherProfile
+	}
+
+	tlist ()
+	{
+		listProfile teacher ~/myDocuments/teacherProfile
+	}
+	etpcommand=0
+	while [ $etpcommand != q ]
+	do
+		echo "Now you can edit teacher profiles. The options are as follows:"
+		echo "(1) to create a new teacher account"
+		echo "(2) to modify a existing teacher account"
+		echo "(3) to remove a existing teacher account"
+		echo "(4) to list teacher accounts"
+		echo "(q) to exit editTeacherProfile"
+		echo -n "Enter your command: "
+		read etpcommand
+		case $etpcommand in
+			1) tcreate
+				;;
+			2) tmodify
+				;;
+			3) tremove
+				;;
+			4) tlist
+				;;
+		esac
+	done
+}
+
+# A function that called by super () to edit curriculum profile(create, modify and remove)
+# Calling the unviersal function createProfile (), but write other two explicitly
+editCurriculumProfile ()
+{
+	ccreate ()
+	{
+		createProfile curriculum ~/myDocuments/curriculumProfile
+	}
+
+	cmodify ()
+	{
+		echo -n "Enter the name of the curriculum that you want to modify: "
+		read cname
+		echo "You mean: "
+		grep $cname ~/myDocuments/curriculumProfile
+		echo -n "Enter new curriculum name: "
+		read ncname
+		echo -n "Enter new teacher ID: "
+		read NTID
+		sed -i "/$cname/d" ~/myDocuments/curriculumProfile
+		echo "$NTID		$ncname" >> ~/myDocuments/curriculumProfile
+		echo "Curriculum profile modification success!"
+	}
+
+	cremove ()
+	{
+		echo "Enter the name of the curriculum that you want to remove: "
+		read cname
+		echo "Do you want to remove: (yes / no)"
+		grep $cname ~/myDocuments/curriculumProfile
+		read cmd
+		if test $cmd = yes
+			then
+				sed -i "/$cname/d" ~/myDocuments/curriculumProfile
+				echo "Remove success!"
+			else
+				echo "No remove occurs!"
+		fi
+	}
+
+	ecpcommand=0
+	while [ $ecpcommand != q ]
+	do
+		echo "Now you can edit curriculum profiles. The options are as follows:"
+		echo "(1) to create a new curriculum"
+		echo "(2) to modify a existing curriculum"
+		echo "(3) to remove a existing curriculum"
+		echo "(q) to exit editCurriculumProfile"
+		echo -n "Enter your command: "
+		read ecpcommand
+		case $ecpcommand in
+			1) ccreate
+				;;
+			2) cmodify
+				;;
+			3) cremove
+				;;
+		esac
+	done
+}
+
+# A function that called by super () to make curriculum binding
+# Just bind the curriculum to certain teacher. Remove or modify binding are realized by cmodify () and cremove()
+curriculumBinding ()
+{
+	echo "Now you can bind the curriculum and the teacher"
+	echo -n "Enter the curriculum name: "
+	read cname
+	echo -n "Enter the ID of the teacher who teaches that curriculum: "
+	read TID
+	echo "$TID		$cname" >> ~/myDocuments/curriculumProfile
+	echo "Binding success!"
+}
+
+# A function serving for super user
+# Just make some logic decisions and then call relating functions described above to do specific jobs
+super ()
+{
+	echo -n "Enter your super user ID: "
+	read SID
+	if test $SID = 777																	# Set the super user ID as 777 for convenience
+		then
+			echo "Login success!"
+			rcommand=0
+			while [ $rcommand != q ]
+			do
+				echo "The options are as follows: "
+				echo "(1) to create, modify, remove or list a teacher account"
+				echo "(2) to create, modify, remove or list a curriculum"
+				echo "(3) to bind a curriculum to certain teachers"
+				echo "(q) to log out"
+				echo -n "Enter your command: "
+				read rcommand
+				case $rcommand in
+					1) editTeacherProfile
+						;;
+					2) editCurriculumProfile
+						;;
+					3) curriculumBinding
+						;;
+				esac
+			done
+		else
+			echo "Invalid ID. Try again!"
+	fi
+}
+
+# A function that called by teacher () to edit student profile (create, modify, remove and list)
+# Four functions inside call the four unviersal functions respectively by passing proper arguments
+editStudentProfile ()
+{
+	screate ()
+	{
+		mkdir -p ~/myDocuments/$TID/$curriculum
+		createProfile student ~/myDocuments/$TID/$curriculum/studentsEnrollment
+	}
+
+	smodify ()
+	{
+		modifyProfile student ~/myDocuments/$TID/$curriculum/studentsEnrollment
+	}
+
+	sremove ()
+	{
+		removeProfile student ~/myDocuments/$TID/$curriculum/studentsEnrollment
+	}
+
+	slist ()
+	{
+		listProfile student ~/myDocuments/$TID/$curriculum/studentsEnrollment
+	}
+
+	echo -n "Choose the curriculum you want to edit:"
+	read curriculum
+	espcommand=0
+	while [ $espcommand != q ]
+	do
+		echo "Now you can edit student profiles of $curriculum.The options are as follows:"
+		echo "(1) to create a new student account"
+		echo "(2) to modify a existing student account"
+		echo "(3) to remove a existing student account"
+		echo "(4) to list student accounts"
+		echo "(q) to exit editStudentProfile"
+		echo -n "Enter your command: "
+		read espcommand
+		case $espcommand in
+			1) screate
+				;;
+			2) smodify
+				;;
+			3) sremove
+				;;
+			4) slist
+				;;
+		esac
+	done
+}
+
+# A simple function called by teacher () to edit curriculum information(create, modify, remove and list)
+# The four universal functions are not called here; 
+# icreate (), imodify (), iremove (), ilist () are written explicitly instead
+editCurriculumInfo ()
+{
+	icreate ()
+	{
+		echo "Enter new course infomation of $curriculum:"
+		read info
+		mkdir -p ~/myDocuments/$TID/$curriculum
+		echo "$info" > ~/myDocuments/$TID/$curriculum/courseInfo
+		echo "Course infomation creation success!"
+	}	
+
+	imodify ()
+	{
+		echo -n "The existing course informatin of $curriculum is: "
+		cat ~/myDocuments/$TID/$curriculum/courseInfo
+		echo -n "Enter new course infomation: "
+		read info
+		echo "$info" > ~/myDocuments/$TID/$curriculum/courseInfo
+		echo "Course infomation modification success!"
+	}
+
+	iremove ()
+	{
+		echo "The existing course informatin of $curriculum is: "
+		cat ~/myDocuments/$TID/$curriculum/courseInfo
+		echo -n "You want to remove it ? (yes / no) "
+		read cmd
+		if test $cmd = yes
+			then
+				echo "NULL" > ~/myDocuments/$TID/$curriculum/courseInfo
+				echo "Remove success!"
+			else
+				echo "No remove occurs!"
+		fi
+	}
+
+	ilist ()
+	{
+		echo "The course informatin of $curriculum is: "
+		cat ~/myDocuments/$TID/$curriculum/courseInfo
+	}
+
+	echo -n "Choose the curriculum you want to edit:"
+	read curriculum
+	icommand=0	
+	while [ $icommand != q ]
+	do
+		echo "Now you can edit information of $curriculum The options are as follows:"
+		echo "(1) to create a new course information"
+		echo "(2) to edit a existing course information"
+		echo "(3) to remove a existing course informaion"
+		echo "(4) to list the course informaion"
+		echo "(q) to quit edit information of $curriculum"
+		echo -n "Enter your command: "
+		read icommand	
+		case $icommand in
+			1) icreate
+				;;
+			2) imodify
+				;;
+			3) iremove
+				;;
+			4) ilist
+				;;
+		esac
+	done
+}
+
+# A function called by teacher () to edit homework/lab information of a certain curriculum (create, modify, remove and list)
+# The four universal functions are not called here; 
+# icreate (), imodify (), iremove (), ilist () are written explicitly instead
+editHomeworkInfo ()
+{
+	hcreate ()
+	{
+		echo -n "Enter the name of the homework/lab: "
+		read name
+		echo "Enter the contents of the homework/lab of $curriculum:"
+		read hl
+		mkdir -p ~/myDocuments/$TID/$curriculum/homeworkOrLab/$name					# Make a directory for each homework/lab of a given curriculum
+		echo "$hl" >> ~/myDocuments/$TID/$curriculum/homeworkOrLab/$name/contents
+		echo "Homework/lab creation success!"
+	}	
+
+	hmodify ()
+	{
+		echo -n "The present homework/lab assignment of $curriculum is: "
+		ls ~/myDocuments/$TID/$curriculum/homeworkOrLab
+		echo -n "Enter the name of the homework/lab that you want to modify: "
+		read name
+		echo "Enter the new contents of the homework/lab $name:"
+		read hl
+		echo "$hl" > ~/myDocuments/$TID/$curriculum/homeworkOrLab/$name/contents			
+		echo "Homework/lab modification success!"
+	}
+
+	hremove ()
+	{
+		echo -n "The present homework/lab assignment of $curriculum is: "
+		ls ~/myDocuments/$TID/$curriculum/homeworkOrLab
+		echo -n "Enter the name of the homework/lab that you want to remove: "
+		read name
+		echo -n "You want to remove $name ? (yes / no) "
+		read cmd
+		if test $cmd = yes
+			then
+				rm -r ~/myDocuments/$TID/$curriculum/homeworkOrLab/$name/            	# Remove recursively under the directory of a given homework/lab name
+				echo "Remove success!"
+			else
+				echo "No remove occurs!"
+		fi
+	}
+
+	hlist ()
+	{
+		echo -n "The present homework/lab assignment of $curriculum is: "
+		ls ~/myDocuments/$TID/$curriculum/homeworkOrLab
+		echo -n "Enter the name of the homework/lab that you want to see: "
+		read name
+		echo "The content of $name is: "
+		cat ~/myDocuments/$TID/$curriculum/homeworkOrLab/$name/contents
+	}
+
+	echo -n "Choose the curriculum whose homework/lab you want to edit:"
+	read curriculum
+	hcommand=0	
+	while [ $hcommand != q ]
+	do
+		echo "Now you can edit the homework/lab information of $curriculum The options are as follows:"
+		echo "(1) to create a new homework/lab"
+		echo "(2) to edit a existing homework/lab"
+		echo "(3) to remove a existing homework/lab"
+		echo "(4) to list the homework/lab informaion"
+		echo "(q) to quit edit homework/lab information of $curriculum"
+		echo -n "Enter your command: "
+		read hcommand	
+		case $hcommand in
+			1) hcreate
+				;;
+			2) hmodify
+				;;
+			3) hremove
+				;;
+			4) hlist
+				;;
+		esac
+	done
+}
+
+# A function called by teacher () to check the homework/lab uploaded by students of a certain curriculum
+listStudentHandin ()
+{
+	echo -n "Enter the curriculum name you want to check: "
+	read curriculum
+	echo -n "The present homework/lab assignment of $curriculum is: "
+	ls ~/myDocuments/$TID/$curriculum/homeworkOrLab
+	echo -n "Enter the name of the homework/lab that you want to check: "
+	read name
+	echo -n "Enter the ID of the student whose homework you want to check: "
+	read SID
+	echo "The answer given by student $SID is:"
+	cat ~/myDocuments/$TID/$curriculum/homeworkOrLab/$name/$SID			
+}
+
+# A function serving for teacher user
+# Just make some logic decisions and then call relating functions described above to do specific jobs
+teacher ()
+{
+	echo -n "Enter your teacher ID: "
+	read TID
+	grep "$TID" ~/myDocuments/teacherProfile | wc -l > ~/myDocuments/teacherLogin					# To judge whether the given ID is added by super user or not
+	validTID=`ls ~/myDocuments/teacherLogin | wc -l`
+	if test $validTID -gt 0
+		then
+			echo "Login success! Weclome $TID! The curriculums you teach are:"
+			grep "$TID" ~/myDocuments/curriculumProfile
+			rcommand=0
+			while [ $rcommand != q ]
+			do
+				echo "The options are as follows:"
+				echo "(1) to create, modify, remove or list student account of a certain curriculumn"
+				echo "(2) to create, modify, remove or list the infomation of a certain curriculum"
+				echo "(3) to create, modify, remove or list the infomation of homework or lab of a certain curriculum"
+				echo "(4) to print students' homework infomation"
+				echo "(q) to log out"
+				echo -n "Enter your command: "
+				read rcommand
+				case $rcommand in
+					1) editStudentProfile
+						;;
+					2) editCurriculumInfo
+						;;
+					3) editHomeworkInfo
+						;;
+					4) listStudentHandin
+						;;
+				esac
+			done
+		else
+			echo "Invalid teacher ID! Try again!"
+	fi
+}
+
+# A function called by student () to edit the homework/lab assigned by his/her teacher of a certain curriculum
+# Function createHomework() to create and uploaded a new homework/lab
+# Function modifyHomework() to modify a existing homework/lab uploaded previously
+editHomeworkOrLab ()
+{
+	createHomework ()
+	{
+		echo "Your answer is:"
+		read answer
+		echo "$answer" > ~/myDocuments/$TID/$cname/homeworkOrLab/$name/$SID  		# Each student's answer for a certain homework is stored in a file of his student ID 
+		echo "Answer for $name uploaded success!"                                   # Upload means writing to the proper file
+	}
+	
+	modifyHomework ()
+	{
+		echo "The answer you uploaded previously is:"
+		cat ~/myDocuments/$TID/$cname/homeworkOrLab/$name/$SID
+		echo -n "Do you want to renew it ? (yes / no) "
+		read cmd
+		if test $cmd = yes
+			then
+				echo "Your new answer is:"
+				read answer
+				echo "$answer" > ~/myDocuments/$TID/$cname/homeworkOrLab/$name/$SID
+				echo "New answer for $name uploaded success!"
+			else
+				echo "No modification occurs!"
+		fi
+	}
+
+	hcommand=0	
+	while [ $hcommand != q ]
+	do
+		echo -n "The present homework/lab assignment of $cname is: "
+		ls ~/myDocuments/$TID/$cname/homeworkOrLab
+		echo -n "Enter the name of the homework/lab that you want to see: "
+		read name
+		echo "The content of $name is: "
+		cat ~/myDocuments/$TID/$cname/homeworkOrLab/$name/contents
+		echo "Now you can edit the contents of $name The options are as follows:"
+		echo "(1) to create new answer for $name"
+		echo "(2) to edit a existing answer for $name"
+		echo "(q) to quit edit homework/lab of $cname"
+		echo -n "Enter your command: "
+		read hcommand	
+		case $hcommand in
+			1) createHomework 
+				;;
+			2) modifyHomework
+				;;
+		esac
+	done
+}
+
+# A function called by student () to query whether he/she has uploaded a certain homework/lab of the curriculum or not
+queryAssignment ()
+{
+	echo -n "The present homework/lab assignment of $cname is: "
+	ls ~/myDocuments/$TID/$cname/homeworkOrLab
+	echo -n "Enter the name of the homework/lab that you want to query: "
+	read name
+	validHomework=`ls ~/myDocuments/$TID/$cname/homeworkOrLab/$name/$SID | wc -l`			# To check if the file of this student ID exists or not
+	if test $validHomework -gt 0
+		then
+			echo "This homework you've already uploaded!"
+		else
+			echo "You haven't uploaded this homework yet!"
+	fi
+}
+
+# A function serving for student user
+# Just make some logic decisions and then call relating functions described above to do specific jobs
+student ()
+{
+	echo -n "Enter your teacher's ID: "                                                              # Use teacher's ID and curriculum name
+	read TID                                                                                         # to determain which class the student
+	echo -n "Enter the curriculum you take: "                                                        # belongs to.
+	read cname                                                                                       # 
+	echo -n "Enter your student ID: "                                                                #
+	read SID	                                                                                     # Then judge whether the teacher of              
+	grep "$SID" ~/myDocuments/$TID/$cname/studentsEnrollment | wc -l > ~/myDocuments/studentLogin    # this class has added this student yet
+	validSID=`ls ~/myDocuments/studentLogin | wc -l`
+	if test $validSID -gt 0
+		then
+			echo "Login success! Weclome $SID! The curriculum you take is $cname"
+			scommand=0
+			while [ $scommand != q ]
+			do
+				echo "The options are as follows:"
+				echo "(1) to create or edit the homework/lab of $cname"
+				echo "(2) to query the infomation about your assignment of $cname"
+				echo "(q) to log out"
+				echo -n "Enter your command: "
+				read scommand
+				case $scommand in
+					1) editHomeworkOrLab
+						;;
+					2) queryAssignment
+						;;
+				esac
+			done
+	fi
+}
+
+# Greetings and ask the uesr to choose a login mode
+# Call super () to serve for super uesr
+# Call teacher () to serve for teacher
+# Call student () to serve for student
+echo "Welcome to assignment management system!"
+echo -n "Choose your login mode(r for super, t for teacher and s for student) or q to quit: "
+read usermode
+while [ $usermode != q ]
+do
+	case $usermode in
+		r) super
+		;;
+
+		t) teacher
+		;;
+	
+		s) student
+		;;
+	esac
+	echo -n "Choose your login mode(r for super, t for teacher and s for student) or q to quit: "
+	read usermode
+done
+echo "You quit the assignment management system!"

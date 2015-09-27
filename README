@@ -1,0 +1,4 @@
+Three simple bash programs.
+sort: read 100 integers from stdin then find the maximum, minimum and average of these integers. And sort then in ascending order
+palindrome: determain whether a string(after deleting non alphabetic character) is palindrome or not
+homeworkManagementSystem: a comparatively large bash program to implement a simple homework management system. 
